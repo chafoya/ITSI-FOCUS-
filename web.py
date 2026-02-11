@@ -131,11 +131,9 @@ def save_user_data():
     
     return jsonify({'success': True})
 
-if __name__ == '__main__':
-    # Crear archivos vacíos si no existen
-    if not os.path.exists(DATA_FILE):
-        save_data(DATA_FILE, {})
-    if not os.path.exists(USERS_FILE):
-        save_data(USERS_FILE, {})
 
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
+
+
