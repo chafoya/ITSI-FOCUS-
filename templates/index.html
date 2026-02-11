@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITSI- FOCUS+ - Neon Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* ================== ESTILOS GENERALES & NEÓN ================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #00f3ff; /* Cyan más brillante para Neón */
+            --accent-hover: #00c8d4;
+            --success-color: #00ff88; /* Verde Neón */
+            --danger-color: #ff3131;  /* Rojo Neón */
+            --warning-color: #ffe600; /* Amarillo Neón para Media */
+            --text-light: #ffffff;
+            --bg-dark: #0a0a12;       /* Fondo más oscuro para contraste */
+            --bg-card: #11111e;
+            --border-color: rgba(0, 243, 255, 0.2); /* Bordes sutilmente azules */
+            
+            /* Efectos de brillo */
+            --neon-glow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-color), 0 0 40px var(--accent-color);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+        }
+
+        /* ================== LOGIN ================== */
+        .login-screen {
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 2rem;
+        }
+        .login-screen.hidden { display: none; }
+        
+        .login-container {
+            background: rgba(17, 17, 30, 0.9); backdrop-filter: blur(15px);
+            border-radius: 30px; padding: 3rem; max-width: 450px; width: 100%;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1); 
+            border: 1px solid var(--border-color);
+        }
+        .logo-login h1 {
+            font-size: 2rem; font-weight: 700; text-align: center; margin-bottom: 2rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 15px var(--accent-color); /* Texto Neón */
+            letter-spacing: 2px;
+        }
+        .tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); }
+        .tab {
+            flex: 1; padding: 1rem; text-align: center; cursor: pointer;
+            border-bottom: 3px solid transparent; transition: all 0.3s;
+            color: rgba(255,255,255,0.6);
+        }
+        .tab:hover { color: white; text-shadow: 0 0 5px white; }
+        .tab.active { 
+            border-bottom-color: var(--accent-color); 
+            color: var(--accent-color);
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+        
+        .form-container { display: none; animation: fadeIn 0.5s ease; }
+        .form-container.active { display: block; }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        .form-input, .form-select {
+            width: 100%; padding: 0.8rem 1rem 0.8rem 3rem;
+            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);
+            border-radius: 10px; color: white; transition: 0.3s;
+        }
+        /* Input Glow Focus */
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+        }
+
+        .input-icon { position: relative; }
+        .input-icon i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--accent-color); }
+        
+        /* BOTONES NEÓN */
+        .btn {
+            width: 100%; padding: 0.8rem; border: none; border-radius: 10px;
+            font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-primary { 
+            background: transparent; 
+            color: var(--accent-color); 
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 5px var(--accent-color);
+        }
+        .btn-primary:hover { 
+            background: var(--accent-color); 
+            color: black;
+            box-shadow: var(--neon-glow); /* GLOW INTENSO */
+            transform: translateY(-2px);
+        }
+
+        .error-message { color: var(--danger-color); display: none; margin-bottom: 1rem; text-align: center; text-shadow: 0 0 5px red;}
+        .success-message { color: var(--success-color); display: none; margin-bottom: 1rem; text-align: center; text-shadow: 0 0 5px green;}
+        .show { display: block; }
+
+        /* ================== APP SCREEN ================== */
+        .app-screen { display: none; }
+        .app-screen.active { display: block; }
+
+        .header {
+            background: rgba(10, 10, 18, 0.95); padding: 1rem 2rem;
+            border-bottom: 1px solid var(--accent-color); display: flex;
+            justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 5px 20px rgba(0, 243, 255, 0.1);
+        }
+        .nav-menu { list-style: none; display: flex; gap: 1rem; }
+        .nav-menu a { 
+            color: rgba(255,255,255,0.7); text-decoration: none; padding: 0.5rem 1rem; 
+            border-radius: 50px; transition: all 0.3s; border: 1px solid transparent;
+        }
+        /* Hover del Menú */
+        .nav-menu a:hover, .nav-menu a.active { 
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            text-shadow: 0 0 5px var(--accent-color);
+        }
+        /* Botón Salir */
+        .btn-logout { color: var(--danger-color) !important; }
+        .btn-logout:hover { 
+            background: rgba(255, 49, 49, 0.1) !important;
+            border-color: var(--danger-color) !important;
+            box-shadow: 0 0 15px rgba(255, 49, 49, 0.4) !important;
+            text-shadow: 0 0 5px var(--danger-color) !important;
+        }
+        
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .section { display: none; animation: fadeIn 0.5s; }
+        .section.active { display: block; }
+
+        /* Cards */
+        .card { 
+            background: var(--bg-card); padding: 2rem; border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.05); margin-bottom: 2rem;
+            transition: 0.3s;
+        }
+        .card:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.15); /* Glow en cards */
+        }
+        .card-title { font-size: 1.5rem; color: var(--accent-color); margin-bottom: 1.5rem; text-shadow: 0 0 5px rgba(0, 243, 255, 0.5); }
+
+        /* Estilos del Perfil y CAMBIO DE FOTO */
+        .profile-header { display: flex; align-items: center; gap: 2rem; margin-bottom: 2rem; }
+        .profile-avatar-container { position: relative; }
+        .profile-avatar {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: transparent;
+            border: 3px solid var(--accent-color);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: bold; color: var(--accent-color);
+            box-shadow: 0 0 20px var(--accent-color), inset 0 0 10px var(--accent-color);
+            text-shadow: 0 0 10px var(--accent-color);
+            background-size: cover; background-position: center;
+        }
+        .btn-change-photo {
+            position: absolute; bottom: 0; right: 0;
+            width: 35px; height: 35px; border-radius: 50%;
+            background: var(--bg-dark); border: 2px solid var(--accent-color);
+            color: var(--accent-color); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .btn-change-photo:hover {
+            background: var(--accent-color); color: black;
+            box-shadow: 0 0 15px var(--accent-color);
+        }
+        .profile-info h3 { font-size: 1.8rem; margin-bottom: 0.5rem; color: white; }
+        .profile-info p { opacity: 0.7; color: var(--accent-color); }
+
+        /* CHART CONTAINER STYLE */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Calendario */
+        .calendar-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+        .calendar-nav-buttons button { 
+            background: none; border: 1px solid var(--accent-color); color: var(--accent-color); 
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer; margin-right: 0.5rem;
+            transition: 0.3s;
+        }
+        .calendar-nav-buttons button:hover {
+            background: var(--accent-color); color: black;
+            box-shadow: 0 0 15px var(--accent-color);
+        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .cal-day-header { text-align: center; color: var(--accent-color); font-weight: bold; padding: 0.5rem; }
+        .cal-day {
+            background: rgba(255,255,255,0.03); min-height: 100px; padding: 0.5rem;
+            border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; transition: 0.3s;
+        }
+        .cal-day:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+        .cal-day.today { 
+            border: 1px solid var(--accent-color); 
+            box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+        .cal-event { 
+            font-size: 0.7rem; padding: 2px 4px; border-radius: 3px; margin-top: 2px; 
+            background: rgba(0, 243, 255, 0.2); color: var(--accent-color); border: 1px solid var(--accent-color);
+        }
+        .cal-event.red { 
+            background: rgba(255, 49, 49, 0.2); color: var(--danger-color); border-color: var(--danger-color);
+        }
+
+        /* Tareas */
+        .task-item { 
+            background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 10px; 
+            margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; 
+            border: 1px solid transparent; transition: 0.3s;
+        }
+        .task-item:hover {
+            border-color: var(--accent-color);
+            background: rgba(0, 243, 255, 0.05);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+        .task-item.completed { opacity: 0.5; text-decoration: line-through; border-color: var(--success-color); }
+        
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .stat-card { 
+            background: var(--bg-card); padding: 1.5rem; border-radius: 15px; 
+            text-align: center; border: 1px solid rgba(255,255,255,0.05); 
+            transition: 0.3s;
+        }
+        .stat-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+        .stat-val { 
+            font-size: 2.5rem; font-weight: 700; color: white; 
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="login-screen">
+        <div class="login-container">
+            <div class="logo-login"><h1>ITSI FOCUS+ "PIOE"</h1></div>
+            <div class="tabs">
+                <div class="tab active" onclick="showTab('login')">Iniciar Sesión</div>
+                <div class="tab" onclick="showTab('register')">Registrarse</div>
+            </div>
+
+            <div id="login-form" class="form-container active">
+                <div id="login-error" class="error-message"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <div class="input-icon"><i class="fas fa-envelope"></i><input type="email" class="form-input" id="login-email" placeholder="correo@clases.edu.sv" required></div>
+                        <small style="opacity:0.6; display:block; margin-top:5px; color: var(--accent-color);">Solo correos @clases.edu.sv</small>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-icon"><i class="fas fa-lock"></i><input type="password" class="form-input" id="login-password" placeholder="Contraseña" required></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Entrar</button>
+                </form>
+            </div>
+
+            <div id="register-form" class="form-container">
+                <div id="register-error" class="error-message"></div>
+                <div id="register-success" class="success-message"></div>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <div class="input-icon"><i class="fas fa-user"></i><input type="text" class="form-input" id="register-name" placeholder="Nombre Completo" required></div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-icon"><i class="fas fa-envelope"></i><input type="email" class="form-input" id="register-email" placeholder="correo@clases.edu.sv" required pattern=".*@clases\.edu\.sv$"></div>
+                        <small style="opacity:0.6; display:block; margin-top:5px; color: var(--accent-color);">Solo correos @clases.edu.sv</small>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-icon"><i class="fas fa-lock"></i><input type="password" class="form-input" id="register-password" placeholder="Mínimo 6 caracteres" required minlength="6"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Cuenta</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-screen" class="app-screen">
+        <header class="header">
+            <div style="font-weight:700; font-size:1.2rem; color: var(--accent-color); text-shadow: 0 0 10px var(--accent-color);">ITSI Focus+ "Plataforma Inteligente de Organización Estudiantil"</div>
+            <ul class="nav-menu">
+                <li><a href="#" onclick="showSection('inicio')" class="active">Inicio</a></li>
+                <li><a href="#" onclick="showSection('añadir')">Añadir</a></li>
+                <li><a href="#" onclick="showSection('historial')">Historial</a></li>
+                <li><a href="#" onclick="showSection('calendario')">Calendario</a></li>
+                <li><a href="#" onclick="showSection('notas')">Notas</a></li>
+                <li><a href="#" onclick="showSection('perfil')">Perfil</a></li>
+                <li><a href="#" onclick="logout()" class="btn-logout">Salir</a></li>
+            </ul>
+        </header>
+
+        <div class="container">
+            <section id="inicio" class="section active">
+                <div class="card">
+                    <h2 class="card-title">Bienvenido, <span id="user-display-name">Estudiante</span></h2>
+                    <p>Aquí te mostramos un resumen de tu actividad académica y algunas tareas que tienes pendiente.</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-val" id="total-tasks-home">0</div><div>Tareas Pendientes</div></div>
+                    <div class="stat-card"><div class="stat-val" id="completed-tasks-home">0</div><div>Completadas</div></div>
+                    <div class="stat-card"><div class="stat-val" id="total-notes-home">0</div><div>Notas</div></div>
+                </div>
+            </section>
+
+            <section id="añadir" class="section">
+                <div class="card">
+                    <h2 class="card-title">Nueva Tarea</h2>
+                    <form id="add-task-form">
+                        <div class="form-group">
+                            <label>Materia</label>
+                            <input type="text" id="task-subject" class="form-input" placeholder="Ej: Matemáticas" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tarea</label>
+                            <input type="text" id="task-title" class="form-input" placeholder="Ej: Ejercicios pág 50" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" id="task-date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Prioridad</label>
+                            <select id="task-priority" class="form-select">
+                                <option value="low" style="color:black;">Baja</option>
+                                <option value="medium" style="color:black;">Media</option>
+                                <option value="high" style="color:black;">Alta</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Tarea</button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="historial" class="section">
+                <h2 class="card-title">Estadísticas & Tareas</h2>
+                
+                <div class="chart-container">
+                    <canvas id="priorityChart"></canvas>
+                </div>
+
+                <div id="tasks-container"></div>
+            </section>
+
+            <section id="calendario" class="section">
+                <div class="calendar-header">
+                    <div>
+                        <div class="calendar-nav-buttons">
+                            <button onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                            <button onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <h2 id="cal-month-year" style="text-shadow: 0 0 10px var(--accent-color);">FEBRERO 2026</h2>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <span class="cal-day-header">Lu</span><span class="cal-day-header">Ma</span>
+                        <span class="cal-day-header">Mi</span><span class="cal-day-header">Ju</span>
+                        <span class="cal-day-header">Vi</span><span class="cal-day-header">Sa</span>
+                        <span class="cal-day-header">Do</span>
+                    </div>
+                </div>
+                <div id="calendar-grid" class="calendar-grid"></div>
+            </section>
+
+            <section id="notas" class="section">
+                <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+                    <h2 class="card-title">Notas Rápidas</h2>
+                    <button class="btn btn-primary" onclick="createNewNote()">+ Nueva</button>
+                </div>
+                <div id="notes-grid" class="stats-grid"></div>
+            </section>
+
+            <section id="perfil" class="section">
+                <div class="card">
+                    <h2 class="card-title">Mi Perfil</h2>
+                    
+                    <div class="profile-header">
+                        <div class="profile-avatar-container">
+                            <div class="profile-avatar" id="profile-avatar-initials">US</div>
+                            <button class="btn-change-photo" onclick="document.getElementById('avatar-upload').click()" title="Cambiar Foto">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                            <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="previewAvatar(event)">
+                        </div>
+
+                        <div class="profile-info">
+                            <h3 id="profile-name-display">Usuario</h3>
+                            <p id="profile-email-display">usuario@clases.edu.sv</p>
+                        </div>
+                    </div>
+
+                    <form id="profile-form" onsubmit="updateProfile(event)">
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <div class="input-icon"><i class="fas fa-user"></i><input type="text" id="profile-name-input" class="form-input" required></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Correo Electrónico</label>
+                            <div class="input-icon"><i class="fas fa-envelope"></i><input type="email" id="profile-email-input" class="form-input" disabled style="opacity: 0.6; cursor: not-allowed;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Nueva Contraseña</label>
+                            <div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="profile-pass-input" class="form-input" placeholder="Opcional"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // --- ESTADO GLOBAL ---
+        let plannerData = { tasks: [], notes: [] };
+        let userData = { name: "", email: "" }; 
+        let currentDate = new Date();
+        let myChart = null; // Instancia del gráfico
+
+        // --- NAVEGACIÓN UI ---
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+            if(tab === 'login') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('login-form').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('register-form').classList.add('active');
+            }
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            
+            document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+            const link = document.querySelector(`.nav-menu a[onclick="showSection('${id}')"]`);
+            if(link) link.classList.add('active');
+
+            if(id === 'calendario') renderCalendar();
+            if(id === 'historial') { renderTasks(); renderChart(); }
+            if(id === 'notas') renderNotes();
+            if(id === 'perfil') loadProfileUI();
+        }
+
+        // --- API ---
+        async function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, email, password })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    document.getElementById('register-success').innerText = "¡Cuenta creada! Inicia sesión.";
+                    document.getElementById('register-success').classList.add('show');
+                    document.getElementById('register-error').classList.remove('show');
+                    e.target.reset();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch(err) {
+                const errDiv = document.getElementById('register-error');
+                errDiv.innerText = err.message;
+                errDiv.classList.add('show');
+                document.getElementById('register-success').classList.remove('show');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if(res.ok) {
+                    userData = data.user;
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-screen').classList.add('active');
+                    document.getElementById('user-display-name').innerText = userData.name.split(' ')[0];
+                    loadData(); 
+                } else {
+                    const errDiv = document.getElementById('login-error');
+                    errDiv.innerText = data.error;
+                    errDiv.classList.add('show');
+                }
+            } catch(err) {
+                console.error(err);
+                alert("Error de conexión. Asegúrate de ejecutar 'python web.py'");
+            }
+        }
+
+        // --- PERFIL Y FOTO ---
+        function loadProfileUI() {
+            document.getElementById('profile-name-display').innerText = userData.name;
+            document.getElementById('profile-email-display').innerText = userData.email;
+            
+            const avatar = document.getElementById('profile-avatar-initials');
+            if (!avatar.style.backgroundImage) {
+                const initials = userData.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                avatar.innerText = initials;
+            }
+
+            document.getElementById('profile-name-input').value = userData.name;
+            document.getElementById('profile-email-input').value = userData.email;
+        }
+
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const avatar = document.getElementById('profile-avatar-initials');
+                    avatar.innerText = ""; 
+                    avatar.style.backgroundImage = `url(${e.target.result})`;
+                    alert("Foto actualizada (Localmente)");
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function updateProfile(e) {
+            e.preventDefault();
+            const newName = document.getElementById('profile-name-input').value;
+            userData.name = newName; 
+            alert("Perfil actualizado");
+            loadProfileUI();
+            document.getElementById('user-display-name').innerText = newName.split(' ')[0];
+            document.getElementById('profile-pass-input').value = "";
+        }
+
+        // --- DATA ---
+        async function loadData() {
+            try {
+                const res = await fetch('/api/data');
+                if(res.ok) {
+                    plannerData = await res.json();
+                    updateDashboard();
+                    renderChart(); // Actualizar gráfico al cargar
+                }
+            } catch(e) { console.error("Error cargando datos", e); }
+        }
+
+        async function saveData() {
+            await fetch('/api/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(plannerData)
+            });
+            updateDashboard();
+            renderChart(); // Actualizar gráfico al guardar
+        }
+
+        function updateDashboard() {
+            document.getElementById('total-tasks-home').innerText = plannerData.tasks ? plannerData.tasks.filter(t => !t.completed).length : 0;
+            document.getElementById('completed-tasks-home').innerText = plannerData.tasks ? plannerData.tasks.filter(t => t.completed).length : 0;
+            document.getElementById('total-notes-home').innerText = plannerData.notes ? plannerData.notes.length : 0;
+        }
+
+        function logout() {
+            fetch('/api/logout');
+            location.reload();
+        }
+
+        // --- TASKS ---
+        document.getElementById('add-task-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if(!plannerData.tasks) plannerData.tasks = [];
+            
+            plannerData.tasks.push({
+                id: Date.now(),
+                subject: document.getElementById('task-subject').value,
+                title: document.getElementById('task-title').value,
+                date: document.getElementById('task-date').value,
+                priority: document.getElementById('task-priority').value,
+                completed: false
+            });
+            saveData();
+            e.target.reset();
+            alert("Tarea Guardada");
+            showSection('historial');
+        });
+
+        function renderTasks() {
+            const container = document.getElementById('tasks-container');
+            container.innerHTML = '';
+            if(!plannerData.tasks || plannerData.tasks.length === 0) {
+                container.innerHTML = '<p style="text-align:center; opacity:0.6;">No hay tareas.</p>';
+                return;
+            }
+            plannerData.tasks.forEach(task => {
+                // Label para mostrar la prioridad en texto en la lista
+                let priorityLabel = "";
+                let priorityColor = "";
+                if(task.priority === 'high') { priorityLabel = "ALTA"; priorityColor = "#ff3131"; }
+                else if(task.priority === 'medium') { priorityLabel = "MEDIA"; priorityColor = "#ffe600"; }
+                else { priorityLabel = "BAJA"; priorityColor = "#00f3ff"; }
+
+                const div = document.createElement('div');
+                div.className = `task-item ${task.completed ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <input type="checkbox" style="margin-right:10px;" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})">
+                        <div>
+                            <div style="font-weight:bold;">${task.title}</div>
+                            <div style="font-size:0.8rem; opacity:0.7;">${task.subject} - ${task.date} <span style="color:${priorityColor}; margin-left:5px; font-weight:bold;">[${priorityLabel}]</span></div>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask(${task.id})" style="background:none; border:none; color:#e74c3c; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleTask(id) {
+            const task = plannerData.tasks.find(t => t.id === id);
+            if(task) { task.completed = !task.completed; saveData(); renderTasks(); }
+        }
+
+        function deleteTask(id) {
+            if(confirm('¿Borrar?')) {
+                plannerData.tasks = plannerData.tasks.filter(t => t.id !== id);
+                saveData();
+                renderTasks();
+            }
+        }
+
+        // --- CHART JS LOGIC ---
+        function renderChart() {
+            const ctx = document.getElementById('priorityChart');
+            if(!ctx) return;
+
+            // Contar prioridades
+            let highCount = 0, mediumCount = 0, lowCount = 0;
+            if(plannerData.tasks) {
+                plannerData.tasks.forEach(t => {
+                    if(!t.completed) { // Solo graficar tareas pendientes? O todas? Grafiquemos todas o pendientes segun prefieras. Aquí TODAS las activas (no borradas).
+                        if(t.priority === 'high') highCount++;
+                        else if(t.priority === 'medium') mediumCount++;
+                        else lowCount++;
+                    }
+                });
+            }
+
+            // Destruir gráfico anterior si existe para evitar superposiciones
+            if(myChart) {
+                myChart.destroy();
+            }
+
+            // Crear nuevo gráfico
+            myChart = new Chart(ctx, {
+                type: 'pie', // Pastel
+                data: {
+                    labels: ['ALTA', 'MEDIA', 'BAJA'],
+                    datasets: [{
+                        data: [highCount, mediumCount, lowCount],
+                        backgroundColor: [
+                            '#ff3131', // Rojo Neon (Alta)
+                            '#ffe600', // Amarillo Neon (Media)
+                            '#00f3ff'  // Cyan Neon (Baja)
+                        ],
+                        borderColor: '#11111e',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white',
+                                font: { family: 'Poppins' }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- CALENDAR ---
+        function changeMonth(d) { currentDate.setMonth(currentDate.getMonth() + d); renderCalendar(); }
+        
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const months = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+            document.getElementById('cal-month-year').innerText = `${months[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const start = firstDay === 0 ? 7 : firstDay;
+
+            for(let i=1; i<start; i++) grid.appendChild(document.createElement('div'));
+
+            for(let d=1; d<=daysInMonth; d++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-day';
+                const today = new Date();
+                if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) cell.classList.add('today');
+                
+                cell.innerHTML = `<div style="font-weight:bold;">${d}</div>`;
+                
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                if(plannerData.tasks) {
+                    plannerData.tasks.filter(t => t.date === dateStr).forEach(t => {
+                        cell.innerHTML += `<div class="cal-event ${t.priority==='high'?'red':''}">${t.subject}</div>`;
+                    });
+                }
+                grid.appendChild(cell);
+            }
+        }
+
+        // --- NOTES ---
+        function createNewNote() {
+            const txt = prompt("Nueva nota:");
+            if(txt) {
+                if(!plannerData.notes) plannerData.notes = [];
+                plannerData.notes.push({ id: Date.now(), content: txt, date: new Date().toLocaleDateString() });
+                saveData();
+                renderNotes();
+            }
+        }
+
+        function renderNotes() {
+            const grid = document.getElementById('notes-grid');
+            grid.innerHTML = '';
+            if(plannerData.notes) {
+                plannerData.notes.forEach(n => {
+                    const c = document.createElement('div');
+                    c.className = 'stat-card'; 
+                    c.innerHTML = `<div style="text-align:left;">${n.content}</div><div style="font-size:0.7rem; opacity:0.5; margin-top:10px; text-align:right;">${n.date}</div>`;
+                    grid.appendChild(c);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
