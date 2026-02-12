@@ -263,6 +263,64 @@
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ================== CHATBOT AI ================== */
+        .chat-btn {
+            position: fixed; bottom: 20px; right: 20px;
+            width: 60px; height: 60px; border-radius: 50%;
+            background: var(--accent-color); color: black;
+            border: none; cursor: pointer; font-size: 1.5rem;
+            box-shadow: 0 0 20px var(--accent-color);
+            z-index: 1000; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .chat-btn:hover { transform: scale(1.1); box-shadow: 0 0 30px var(--accent-color); }
+        
+        .chat-window {
+            position: fixed; bottom: 90px; right: 20px;
+            width: 350px; height: 500px;
+            background: rgba(10, 10, 18, 0.95); backdrop-filter: blur(10px);
+            border: 1px solid var(--accent-color); border-radius: 20px;
+            display: none; flex-direction: column;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+            z-index: 1000; overflow: hidden;
+        }
+        .chat-window.active { display: flex; animation: fadeIn 0.3s; }
+        
+        .chat-header {
+            padding: 1rem; background: rgba(0, 243, 255, 0.1);
+            border-bottom: 1px solid var(--accent-color);
+            color: var(--accent-color); font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-messages {
+            flex: 1; padding: 1rem; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .msg {
+            max-width: 80%; padding: 0.8rem; border-radius: 10px; font-size: 0.9rem;
+            word-wrap: break-word;
+        }
+        .msg-user {
+            align-self: flex-end; background: var(--accent-color); color: black;
+            border-bottom-right-radius: 2px;
+        }
+        .msg-ai {
+            align-self: flex-start; background: rgba(255,255,255,0.1); color: white;
+            border: 1px solid rgba(255,255,255,0.2); border-bottom-left-radius: 2px;
+        }
+        .chat-input-area {
+            padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex; gap: 0.5rem;
+        }
+        .chat-input {
+            flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--accent-color);
+            color: white; padding: 0.5rem; border-radius: 5px; outline: none;
+        }
+        .chat-send {
+            background: var(--accent-color); border: none; padding: 0.5rem 1rem;
+            border-radius: 5px; cursor: pointer; font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -438,6 +496,22 @@
                     </form>
                 </div>
             </section>
+        </div>
+    </div>
+
+    <button class="chat-btn" onclick="toggleChat()"><i class="fas fa-robot"></i></button>
+    
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header">
+            <span>Gemini AI Tutor</span>
+            <span onclick="toggleChat()" style="cursor:pointer;">&times;</span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="msg msg-ai">¡Hola! Soy tu asistente de estudio. ¿En qué puedo ayudarte hoy?</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta algo..." onkeypress="handleChatEnter(event)">
+            <button class="chat-send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
@@ -781,6 +855,57 @@
                     grid.appendChild(c);
                 });
             }
+        }
+
+        // --- CHATBOT LOGIC ---
+        function toggleChat() {
+            const w = document.getElementById('chat-window');
+            w.classList.toggle('active');
+            if(w.classList.contains('active')) document.getElementById('chat-input').focus();
+        }
+
+        function handleChatEnter(e) {
+            if(e.key === 'Enter') sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            const container = document.getElementById('chat-messages');
+
+            if(!msg) return;
+
+            // 1. Mostrar mensaje usuario
+            container.innerHTML += `<div class="msg msg-user">${msg}</div>`;
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            // 2. Mostrar "Escribiendo..."
+            const loadingId = 'loading-' + Date.now();
+            container.innerHTML += `<div class="msg msg-ai" id="${loadingId}">...</div>`;
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: msg })
+                });
+                const data = await res.json();
+                
+                // 3. Reemplazar loading con respuesta
+                document.getElementById(loadingId).remove();
+                
+                // Formatear respuesta (simple)
+                let reply = data.reply || "Error al conectar con Gemini.";
+                reply = reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                
+                container.innerHTML += `<div class="msg msg-ai">${reply}</div>`;
+
+            } catch(e) {
+                document.getElementById(loadingId).innerText = "Error de conexión.";
+            }
+            container.scrollTop = container.scrollHeight;
         }
     </script>
 </body>
