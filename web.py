@@ -3,6 +3,7 @@ import json
 import os
 import hashlib
 from datetime import datetime
+import google.generativeai as genai  # <--- AGREGADO AQUÍ
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.secret_key = 'tu_clave_secreta_super_segura'  # Necesario para las sesiones
@@ -131,6 +132,32 @@ def save_user_data():
     
     return jsonify({'success': True})
 
+# --- API: CHAT GEMINI (AGREGADO) ---
+# IMPORTANTE: Reemplaza 'AIzaSyC17hXlpju2TrbPCeVGUCiqtFtmSxhGB94' con tu clave real de Google AI Studio
+genai.configure(api_key="TU_API_KEY_AQUI")
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+@app.route('/api/chat', methods=['POST'])
+def chat_ai():
+    data = request.json
+    user_msg = data.get('message', '')
+    
+    if not user_msg:
+        return jsonify({'error': 'Mensaje vacío'}), 400
+
+    try:
+        # Contexto para que actúe como asistente estudiantil
+        prompt = f"Eres un asistente estudiantil útil y motivador para la plataforma ITSI Focus+. Responde de forma breve y concisa a esto: {user_msg}"
+        response = model.generate_content(prompt)
+        return jsonify({'reply': response.text})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    # Crear archivos vacíos si no existen
+    if not os.path.exists(DATA_FILE):
+        save_data(DATA_FILE, {})
+    if not os.path.exists(USERS_FILE):
+        save_data(USERS_FILE, {})
+
+    app.run(host='0.0.0.0', port=5000)
